@@ -4,9 +4,11 @@ dist/
 .env
 
 # Backend
-venv/
+backend/.venv/
+.venv/
 __pycache__/
 *.pyc
+.env
 db.sqlite3
 
 # Mac
