@@ -1,5 +1,6 @@
+// src/api/axiosInstance.ts
 import axios, { AxiosHeaders } from "axios";
-import type { AxiosError, InternalAxiosRequestConfig } from "axios";
+import type { InternalAxiosRequestConfig } from "axios";
 
 import {
   getAccessToken,
@@ -12,27 +13,41 @@ import {
    Base URL
 ================================ */
 
-const raw = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+function normalizeApiBaseUrl(input: string): string {
+  const trimmed = (input || "").trim();
 
-const normalized = raw.replace(/\/+$/, "");
-const baseURL = normalized.endsWith("/api")
-  ? normalized
-  : `${normalized}/api`;
+  // If env var is missing, fallback to local dev
+  if (!trimmed) return "http://127.0.0.1:8000/api";
 
+  // If someone sets: kfursenko-...up.railway.app (without https://),
+  // browsers treat it as a relative path on Vercel. Fix it.
+  const withProtocol =
+    /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+  // Remove trailing slashes
+  const normalized = withProtocol.replace(/\/+$/, "");
+
+  // Ensure /api suffix exactly once
+  return normalized.endsWith("/api") ? normalized : `${normalized}/api`;
+}
+
+const baseURL = normalizeApiBaseUrl(import.meta.env.VITE_API_URL ?? "");
+
+// Note: we don't use withCredentials for JWT in headers
 const api = axios.create({
   baseURL,
   withCredentials: false,
 });
 
 /* ================================
-   Auth routes that don't need token
+   Routes that DON'T require access token
 ================================ */
 
 const NO_AUTH_ROUTES = [
   "/accounts/token/",
   "/accounts/token/refresh/",
   "/accounts/register/",
-];
+] as const;
 
 function isNoAuthRequest(config: InternalAxiosRequestConfig): boolean {
   const url = config.url ?? "";
@@ -43,10 +58,7 @@ function isNoAuthRequest(config: InternalAxiosRequestConfig): boolean {
    Set Authorization header safely
 ================================ */
 
-function setAuthHeader(
-  config: InternalAxiosRequestConfig,
-  token: string
-) {
+function setAuthHeader(config: InternalAxiosRequestConfig, token: string) {
   config.headers = AxiosHeaders.from(config.headers);
   config.headers.set("Authorization", `Bearer ${token}`);
 }
@@ -84,29 +96,31 @@ async function refreshAccessToken(): Promise<string> {
   const refresh = getRefreshToken();
   if (!refresh) throw new Error("No refresh token");
 
+  // Use plain axios (not api) to avoid interceptor loops
   const response = await axios.post<RefreshResponse>(
     `${baseURL}/accounts/token/refresh/`,
     { refresh }
   );
 
   const newAccess = response.data?.access;
-
-  if (!newAccess) {
-    throw new Error("Invalid refresh response");
-  }
+  if (!newAccess) throw new Error("Invalid refresh response");
 
   setAccessToken(newAccess);
   return newAccess;
 }
 
 /* ================================
-   Response interceptor
+   Response interceptor (401 -> refresh)
 ================================ */
 
 api.interceptors.response.use(
   (response) => response,
+  async (error: unknown) => {
+    // Only handle axios errors
+    if (!axios.isAxiosError(error)) {
+      return Promise.reject(error);
+    }
 
-  async (error: AxiosError) => {
     const status = error.response?.status;
     const originalRequest = error.config;
 
@@ -114,7 +128,8 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (status !== 401 || isNoAuthRequest(originalRequest)) {
+    // If it's not 401 OR it's an auth endpoint itself -> just reject
+    if (status !== 401 || isNoAuthRequest(originalRequest as InternalAxiosRequestConfig)) {
       return Promise.reject(error);
     }
 
@@ -122,6 +137,7 @@ api.interceptors.response.use(
       _retry?: boolean;
     };
 
+    // Prevent infinite loops
     if (request._retry) {
       clearTokens();
       return Promise.reject(error);
@@ -130,6 +146,7 @@ api.interceptors.response.use(
     request._retry = true;
 
     try {
+      // If another refresh is already in progress, wait in queue
       if (isRefreshing) {
         return await new Promise((resolve, reject) => {
           queue.push((token) => {
@@ -152,12 +169,10 @@ api.interceptors.response.use(
 
       setAuthHeader(request, newAccessToken);
       return api(request);
-
-    } catch (refreshError) {
+    } catch (refreshError: unknown) {
       resolveQueue(null);
       clearTokens();
       return Promise.reject(refreshError);
-
     } finally {
       isRefreshing = false;
     }
