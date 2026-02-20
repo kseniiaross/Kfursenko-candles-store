@@ -1,0 +1,125 @@
+:root {
+  --header-offset: 138px;
+}
+
+/* PAGE */
+
+.contacts {
+  min-height: 100vh;
+  padding-top: calc(var(--header-offset) + 80px);
+  padding-bottom: 140px;
+
+  display: flex;
+  justify-content: center;
+
+  position: relative;
+}
+
+/* Background */
+
+.contacts::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: url("/images/background.jpg") center / cover no-repeat;
+  filter: blur(14px) brightness(1.05);
+  transform: scale(1.05);
+}
+
+.contacts::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(255,255,255,0.70);
+}
+
+/* Container */
+
+.contacts__container {
+  width: 600px;
+  text-align: center;
+}
+
+/* Title */
+
+.contacts__title {
+  font-family: serif;
+  letter-spacing: 0.35em;
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #2a2a2a;
+}
+
+/* Subtitle */
+
+.contacts__subtitle {
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0.75;
+  margin-bottom: 50px;
+}
+
+/* Card */
+
+.contacts__card {
+  background: rgba(255,255,255,0.40);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.6);
+  padding: 60px 50px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Block */
+
+.contacts__block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Label */
+
+.contacts__label {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+/* Email */
+
+.contacts__email {
+  font-size: 18px;
+  text-decoration: none;
+  color: #3a3a3a;
+  transition: 0.3s ease;
+}
+
+.contacts__email:hover {
+  opacity: 0.6;
+}
+
+/* Divider */
+
+.contacts__divider {
+  height: 1px;
+  background: rgba(0,0,0,0.08);
+}
+
+/* Text */
+
+.contacts__text {
+  font-size: 14px;
+  opacity: 0.8;
+  line-height: 1.6;
+}
+
+.contacts__note {
+  font-size: 12px;
+  opacity: 0.55;
+}

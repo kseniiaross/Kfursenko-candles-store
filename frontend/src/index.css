@@ -1,0 +1,38 @@
+/* src/index.css */
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  /* нейтральная база */
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* чтобы не появлялся горизонтальный скролл */
+  overflow-x: hidden;
+
+  /* фон на случай, если видео не загрузилось */
+  background: #000;
+}
+
+/* Базово убираем подчеркивание у ссылок (цвет наследуется) */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Нормальная box-model база, чтобы не было сюрпризов */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

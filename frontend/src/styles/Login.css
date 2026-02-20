@@ -1,0 +1,174 @@
+:root {
+  --header-offset: 138px;
+}
+
+/* PAGE */
+
+.login {
+  min-height: 100vh;
+  position: relative;
+
+  padding-top: calc(var(--header-offset) + 60px);
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* BACKGROUND */
+
+.login::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: url("/images/background.jpg") center / cover no-repeat;
+  filter: blur(14px) brightness(1.05);
+  transform: scale(1.05);
+}
+
+.login::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(255,255,255,0.72);
+}
+
+/* LAYOUT */
+
+.login__layout {
+  width: 520px;
+}
+
+/* CONTAINER */
+
+.login__left {
+  width: 100%;
+}
+
+.login__content {
+  padding: 70px 60px;
+
+  background: rgba(255,255,255,0.45);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0,0,0,0.05);
+
+  display: flex;
+  flex-direction: column;
+  gap: 35px;
+  text-align: center;
+}
+
+/* TITLE */
+
+.login__title {
+  font-family: serif;
+  letter-spacing: 0.35em;
+  font-size: 24px;
+  color: #2a2a2a;
+}
+
+/* SUBTITLE */
+
+.login__subtitle {
+  font-size: 14px;
+  opacity: 0.6;
+  line-height: 1.6;
+  color: #444;
+}
+
+/* FORM */
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.login__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.login__label {
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.login__input {
+  padding: 14px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: rgba(255,255,255,0.8);
+  outline: none;
+  font-size: 14px;
+}
+
+.login__input:focus {
+  border-color: rgba(0,0,0,0.2);
+}
+
+/* ACTIONS */
+
+.login__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.login__cta {
+  padding: 16px;
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: 0.3s ease;
+  cursor: pointer;
+}
+
+/* PRIMARY – warm beige */
+
+.login__cta--primary {
+  background: #e8dfd6;
+  color: #3a3a3a;
+  border: 1px solid #e8dfd6;
+}
+
+.login__cta--primary:hover {
+  background: #d9cec4;
+  color: #2f2f2f;
+}
+
+/* SECONDARY */
+
+.login__cta--secondary {
+  background: transparent;
+  color: #5a5a5a;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+
+.login__cta--secondary:hover {
+  background: rgba(0,0,0,0.04);
+  color: #3a3a3a;
+}
+
+/* MESSAGES */
+
+.login__message {
+  font-size: 12px;
+}
+
+.login__message--error {
+  color: #a26b6b;
+}
+
+.login__message--server {
+  margin-top: 10px;
+  color: #a26b6b;
+  text-align: center;
+}

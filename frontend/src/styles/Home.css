@@ -1,0 +1,59 @@
+.home {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.home__media {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.home__video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  object-position: center;
+  transform: translate(-50%, -50%) scale(1.02);
+  display: block;
+}
+
+.home__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.home__content {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.home__logoLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: transform 200ms ease;
+}
+
+.home__logoLink:hover {
+  transform: scale(1.04);
+}
+
+.home__logo {
+  width: min(720px, 80vw);
+  height: auto;
+  display: block;
+}

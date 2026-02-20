@@ -1,0 +1,114 @@
+:root {
+  --header-offset: 138px;
+}
+
+/* PAGE */
+
+.loginChoice {
+  min-height: 100vh;
+  position: relative;
+
+  /* поднимаем выше */
+  padding-top: calc(var(--header-offset) + 60px);
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* BACKGROUND */
+
+.loginChoice::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: url("/images/background.jpg") center / cover no-repeat;
+  filter: blur(14px) brightness(1.05);
+  transform: scale(1.05);
+}
+
+.loginChoice::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(255,255,255,0.72);
+}
+
+/* CONTAINER */
+
+.loginChoice__container {
+  width: 500px;
+  padding: 70px 60px;
+
+  background: rgba(255,255,255,0.45);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0,0,0,0.05);
+
+  display: flex;
+  flex-direction: column;
+  gap: 35px;
+  text-align: center;
+}
+
+/* TITLE */
+
+.loginChoice__title {
+  font-family: serif;
+  letter-spacing: 0.35em;
+  font-size: 26px;
+  color: #2a2a2a;
+}
+
+/* SUBTITLE */
+
+.loginChoice__subtitle {
+  font-size: 14px;
+  opacity: 0.6;
+  line-height: 1.6;
+  color: #444;
+}
+
+/* BUTTONS */
+
+.loginChoice__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.loginChoice__btn {
+  padding: 16px;
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: 0.3s ease;
+}
+
+/* PRIMARY – мягкий беж */
+
+.loginChoice__btn--primary {
+  background: #e8dfd6;
+  color: #3a3a3a;
+  border: 1px solid #e8dfd6;
+}
+
+.loginChoice__btn--primary:hover {
+  background: #d9cec4;
+  color: #2f2f2f;
+}
+
+/* SECONDARY – светлая рамка */
+
+.loginChoice__btn--secondary {
+  background: transparent;
+  color: #5a5a5a;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+
+.loginChoice__btn--secondary:hover {
+  background: rgba(0,0,0,0.04);
+  color: #3a3a3a;
+}

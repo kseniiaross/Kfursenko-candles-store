@@ -1,0 +1,7 @@
+#root {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+   --header-offset: 138px;
+  padding-top: var(--header-offset);
+}
