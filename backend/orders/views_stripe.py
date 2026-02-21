@@ -1,6 +1,56 @@
+import json
+import stripe
+
+from django.conf import settings
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse
 from django.db import transaction
+
+from .models import Order
+
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def create_payment_intent(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        order_id = data.get("order_id")
+
+        if not order_id:
+            return JsonResponse({"error": "Missing order_id"}, status=400)
+
+        order = Order.objects.get(id=order_id)
+
+        if order.status != Order.Status.PENDING:
+            return JsonResponse({"error": "Order is not payable"}, status=400)
+
+        amount = int(order.total_amount * 100)
+
+        intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency="usd",
+            metadata={
+                "order_id": str(order.id),
+            },
+        )
+
+        order.stripe_payment_intent_id = intent.id
+        order.save(update_fields=["stripe_payment_intent_id"])
+
+        return JsonResponse({
+            "clientSecret": intent.client_secret
+        })
+
+    except Order.DoesNotExist:
+        return JsonResponse({"error": "Order not found"}, status=404)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
 
 @csrf_exempt
 def stripe_webhook(request):
@@ -9,55 +59,48 @@ def stripe_webhook(request):
 
     payload = request.body
     sig_header = request.META.get("HTTP_STRIPE_SIGNATURE", "")
-
-    endpoint_secret = getattr(settings, "STRIPE_WEBHOOK_SECRET", "")
-    if not endpoint_secret:
-        return HttpResponse("Missing STRIPE_WEBHOOK_SECRET", status=500)
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
 
     try:
-        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
-    except ValueError:
-        return HttpResponse("Invalid payload", status=400)
-    except stripe.error.SignatureVerificationError:
-        return HttpResponse("Invalid signature", status=400)
-
-    event_type = event.get("type", "")
-    obj = (event.get("data") or {}).get("object") or {}
-
-    if event_type in ("payment_intent.succeeded", "payment_intent.payment_failed"):
-        intent_id = (obj.get("id") or "").strip()
-        meta = obj.get("metadata") or {}
-        order_id = (meta.get("order_id") or "").strip()
-
-        if not (order_id and intent_id):
-            return HttpResponse(status=200)
-
-        new_status = (
-            Order.Status.PAID
-            if event_type == "payment_intent.succeeded"
-            else Order.Status.CANCELED
+        event = stripe.Webhook.construct_event(
+            payload,
+            sig_header,
+            endpoint_secret
         )
+    except ValueError:
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError:
+        return HttpResponse(status=400)
 
-        # ✅ idempotent update + respects transitions (PENDING -> PAID / CANCELED)
+    event_type = event["type"]
+    data = event["data"]["object"]
+
+    if event_type == "payment_intent.succeeded":
+        intent_id = data["id"]
+        order_id = data["metadata"].get("order_id")
+
         with transaction.atomic():
-            qs = (
-                Order.objects.select_for_update()
-                .filter(
-                    id=order_id,
-                    stripe_payment_intent_id=intent_id,
-                )
-            )
+            order = Order.objects.select_for_update().filter(
+                id=order_id,
+                stripe_payment_intent_id=intent_id
+            ).first()
 
-            order = qs.first()
-            if not order:
-                return HttpResponse(status=200)
+            if order:
+                order.status = Order.Status.PAID
+                order.save(update_fields=["status", "updated_at"])
 
-            # если уже ушли в shipped/completed/refunded — не трогаем
-            if order.status in (Order.Status.SHIPPED, Order.Status.COMPLETED, Order.Status.REFUNDED):
-                return HttpResponse(status=200)
+    if event_type == "payment_intent.payment_failed":
+        intent_id = data["id"]
+        order_id = data["metadata"].get("order_id")
 
-            if order.status != new_status and order.can_transition(new_status):
-                order.status = new_status
+        with transaction.atomic():
+            order = Order.objects.select_for_update().filter(
+                id=order_id,
+                stripe_payment_intent_id=intent_id
+            ).first()
+
+            if order:
+                order.status = Order.Status.CANCELED
                 order.save(update_fields=["status", "updated_at"])
 
     return HttpResponse(status=200)
